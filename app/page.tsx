@@ -13,6 +13,16 @@ interface Product {
   price: string;
 }
 
+interface CartItem {
+  id: number;
+  name: string;
+  price: string;
+  image: string;
+  color: string;
+  size: string;
+  quantity: number;
+}
+
 const products: Product[] = [
   { id: 1, name: 'Lining printed', category: 'tshirt', images: ['/sh1.jpeg', '/sh2.jpeg', '/sh3.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
   { id: 2, name: 'Tracksuit', category: 'fulldress', images: ['/full1.jpeg', '/full2.jpeg'], colors: ['Black', 'Brown', 'Maroon'], sizes: ['M','L','XL'], price: '1750' },
@@ -26,6 +36,9 @@ const products: Product[] = [
   { id: 10, name: 'Multi Printed ', category: 'tshirt', images: ['/simp4.jpeg'], colors: ['White'], sizes: ['M','L'], price: '1200' },
   { id: 11, name: 'Simple Shirt ', category: 'tshirt', images: ['/simp5.jpeg'], colors: ['White'], sizes: ['M','L'], price: '1200' },
   { id: 12, name: 'Simple Shirt ', category: 'tshirt', images: ['/simp6.jpeg'], colors: ['White'], sizes: ['M','L'], price: '1200' },
+  { id: 13, name: 'Lining printed', category: 'tshirt', images: ['/stripe.jpeg', '/stripe2.jpeg', '/stripe3.jpeg' , '/stripe4.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
+  { id: 1, name: 'Lining printed', category: 'tshirt', images: ['/sh1.jpeg', '/sh2.jpeg', '/sh3.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
+
 ];
 
 export default function Home() {
@@ -37,21 +50,44 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [devWidgetOpen, setDevWidgetOpen] = useState(false);
 
+  // Cart States
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+
+  useEffect(() => {
+    // Load cart from localStorage
+    const savedCart = localStorage.getItem('shean_cart');
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (e) {
+        console.error('Failed to load cart', e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save cart to localStorage
+    localStorage.setItem('shean_cart', JSON.stringify(cart));
+  }, [cart]);
+
   useEffect(() => {
     const handleScroll = () => setIsNavbarSticky(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Lock body scroll when mobile menu or modal is open
+  // Lock body scroll when mobile menu, modal or cart is open
   useEffect(() => {
-    if (mobileMenuOpen || selectedProduct) {
+    if (mobileMenuOpen || selectedProduct || cartOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [mobileMenuOpen, selectedProduct]);
+  }, [mobileMenuOpen, selectedProduct, cartOpen]);
 
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
@@ -67,8 +103,70 @@ export default function Home() {
 
   const filteredProducts = activeCategory === 'all' ? products : products.filter(p => p.category === activeCategory);
 
-  const whatsappMsg = (p: Product) =>
-    `https://wa.me/923190371458?text=${encodeURIComponent(`Hi, I'm interested in *${p.name}* (PKR ${p.price}). Please share availability.`)}`;
+  const addToCart = () => {
+    if (!selectedProduct || !selectedColor || !selectedSize) {
+      alert('Please select color and size');
+      return;
+    }
+
+    const cartId = `${selectedProduct.id}-${selectedColor}-${selectedSize}`;
+    const existingItem = cart.find(item => `${item.id}-${item.color}-${item.size}` === cartId);
+
+    if (existingItem) {
+      setCart(cart.map(item =>
+        `${item.id}-${item.color}-${item.size}` === cartId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setCart([...cart, {
+        id: selectedProduct.id,
+        name: selectedProduct.name,
+        price: selectedProduct.price,
+        image: selectedProduct.images[0],
+        color: selectedColor,
+        size: selectedSize,
+        quantity: 1
+      }]);
+    }
+    setSelectedProduct(null);
+    setSelectedColor('');
+    setSelectedSize('');
+    setCartOpen(true);
+  };
+
+  const removeFromCart = (id: number, color: string, size: string) => {
+    setCart(cart.filter(item => !(item.id === id && item.color === color && item.size === size)));
+  };
+
+  const updateQuantity = (id: number, color: string, size: string, delta: number) => {
+    setCart(cart.map(item => {
+      if (item.id === id && item.color === color && item.size === size) {
+        const newQty = Math.max(1, item.quantity + delta);
+        return { ...item, quantity: newQty };
+      }
+      return item;
+    }));
+  };
+
+  const whatsappCartMsg = () => {
+    const total = cart.reduce((acc, item) => acc + (parseInt(item.price) * item.quantity), 0);
+    let message = "Hi SHEAN, I'd like to place an order:\n\n";
+
+    cart.forEach((item, index) => {
+      message += `${index + 1}. *${item.name}*\n`;
+      message += `   - Color: ${item.color}\n`;
+      message += `   - Size: ${item.size}\n`;
+      message += `   - Qty: ${item.quantity}\n`;
+      message += `   - Price: PKR ${item.price}\n`;
+      message += `   - Image: ${window.location.origin}${item.image}\n\n`;
+    });
+
+    message += `*Total Amount: PKR ${total}*\n\n`;
+    message += "Please confirm availability and sharing shipping details.";
+
+    return `https://wa.me/923190371458?text=${encodeURIComponent(message)}`;
+  };
 
   const navLinks = [
     { id: 'home', label: 'HOME' },
@@ -682,18 +780,112 @@ export default function Home() {
           font-size: 9px; letter-spacing: 2px;
           padding: 6px 14px;
           border: 1px solid #1e1e1e; color: #555;
-          transition: all 0.25s; cursor: default;
+          transition: all 0.25s; cursor: pointer;
         }
         .tag:hover { border-color: #fff; color: #fff; }
-        .btn-wa {
+        .tag.active { border-color: #fff; color: #fff; background: #fff; color: #000; }
+
+        .btn-add-cart {
           display: flex; align-items: center; justify-content: center; gap: 10px;
           padding: 16px 24px; background: #fff;
           color: #000; font-family: 'Montserrat', sans-serif;
           font-size: 10px; letter-spacing: 4px; font-weight: 500;
           text-decoration: none; transition: all 0.3s;
           border: 1px solid #fff; margin-top: 32px;
+          cursor: pointer; width: 100%;
         }
-        .btn-wa:hover { background: transparent; color: #fff; }
+        .btn-add-cart:hover { background: transparent; color: #fff; }
+        .btn-add-cart:disabled { background: #333; border-color: #333; color: #888; cursor: not-allowed; }
+
+        /* ══════════════════════════════════
+           CART SIDEBAR
+        ══════════════════════════════════ */
+        .cart-overlay {
+          position: fixed; inset: 0; z-index: 3000;
+          background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+          display: flex; justify-content: flex-end;
+        }
+        .cart-sidebar {
+          width: 100%; max-width: 420px;
+          background: #0a0a0a; height: 100%;
+          display: flex; flex-direction: column;
+          border-left: 1px solid #1a1a1a;
+          box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+        .cart-header {
+          padding: 24px 30px; border-bottom: 1px solid #111;
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        .cart-title {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 24px; letter-spacing: 2px;
+        }
+        .cart-close {
+          background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;
+        }
+        .cart-items {
+          flex: 1; overflow-y: auto; padding: 30px;
+          display: flex; flex-direction: column; gap: 24px;
+        }
+        .cart-item {
+          display: grid; grid-template-columns: 80px 1fr; gap: 20px;
+          align-items: center;
+        }
+        .cart-item-img {
+          width: 80px; aspect-ratio: 3/4; object-fit: cover; border: 1px solid #1a1a1a;
+        }
+        .cart-item-info { display: flex; flex-direction: column; gap: 4px; }
+        .cart-item-name {
+          font-family: 'Montserrat', sans-serif; font-size: 11px; letter-spacing: 1.5px;
+        }
+        .cart-item-meta {
+          font-family: 'Montserrat', sans-serif; font-size: 9px; color: #555; letter-spacing: 1px;
+        }
+        .cart-item-price {
+          font-family: 'Cormorant Garamond', serif; font-size: 18px; color: #fff; margin-top: 4px;
+        }
+        .cart-item-qty {
+          display: flex; align-items: center; gap: 12px; margin-top: 8px;
+        }
+        .qty-btn {
+          background: none; border: 1px solid #222; color: #fff;
+          width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+          cursor: pointer; font-size: 14px;
+        }
+        .qty-num { font-family: 'Montserrat', sans-serif; font-size: 10px; }
+        .cart-footer {
+          padding: 30px; border-top: 1px solid #111; background: #080808;
+        }
+        .cart-total-row {
+          display: flex; justify-content: space-between; margin-bottom: 24px;
+        }
+        .cart-total-lbl { font-family: 'Montserrat', sans-serif; font-size: 10px; letter-spacing: 2px; color: #555; }
+        .cart-total-val { font-family: 'Cormorant Garamond', serif; font-size: 26px; }
+        .cart-empty {
+          height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+          text-align: center; color: #333;
+        }
+        .navbar-cart {
+          position: relative; background: none; border: none; color: #fff; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .navbar-cart-mobile {
+          display: none;
+        }
+        .cart-badge {
+          position: absolute; top: -6px; right: -8px;
+          background: #fff; color: #000; font-size: 8px; font-weight: 600;
+          width: 14px; height: 14px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+          .navbar-cart { display: none; }
+          .navbar-cart-mobile { 
+            display: flex; position: relative; background: none; border: none; color: #fff; cursor: pointer;
+            align-items: center; justify-content: center;
+          }
+        }
 
         /* ══════════════════════════════════
            FOOTER
@@ -988,18 +1180,34 @@ export default function Home() {
                 {link.label}
               </button>
             ))}
+            
+            <button className="navbar-cart" onClick={() => setCartOpen(true)} aria-label="Open cart">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+              {cart.length > 0 && <span className="cart-badge">{cart.reduce((acc, i) => acc + i.quantity, 0)}</span>}
+            </button>
           </div>
 
-          {/* Hamburger */}
-          <button
-            className={`hamburger ${mobileMenuOpen ? 'open' : ''}`}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+          {/* Hamburger area */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <button className="navbar-cart-mobile" onClick={() => setCartOpen(true)} aria-label="Open cart">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+              </svg>
+              {cart.length > 0 && <span className="cart-badge">{cart.reduce((acc, i) => acc + i.quantity, 0)}</span>}
+            </button>
+            
+            <button
+              className={`hamburger ${mobileMenuOpen ? 'open' : ''}`}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -1199,7 +1407,7 @@ export default function Home() {
           {[
             ['✦', 'Premium Quality', 'We source only the finest fabrics ensuring superior comfort, durability, and a finish that elevates every wear.'],
             ['◈', 'Minimal Design', 'Timeless silhouettes and restrained aesthetics that transcend seasons and speak to every personality.'],
-            ['⟡', 'Direct Ordering', 'Order instantly via WhatsApp with no friction, no delays. Your SHEAN piece arrives with care.'],
+            ['⟡', 'Direct Ordering', 'Add items to your bag and order instantly via WhatsApp with no friction. Your SHEAN piece arrives with care.'],
           ].map(([icon, title, desc], i) => (
             <div key={title as string} className="why-card">
               <div className="why-big-num">0{i + 1}</div>
@@ -1221,8 +1429,8 @@ export default function Home() {
         <div className="how-steps">
           {[
             ['01', '👁', 'Browse', 'Explore our curated collection and discover pieces that match your personal style.'],
-            ['02', '◈', 'Select', 'Choose your preferred colors and sizes from each product listing.'],
-            ['03', '✉', 'Order', 'Connect with us directly on WhatsApp and place your order instantly.'],
+            ['02', '◈', 'Select', 'Choose your preferred colors and sizes and add them to your shopping bag.'],
+            ['03', '✉', 'Order', 'Connect with us directly on WhatsApp and place your order instantly from your bag.'],
           ].map(([num, icon, title, desc]) => (
             <div key={num as string} className="step">
               <span className="step-num">— STEP {num} —</span>
@@ -1235,12 +1443,12 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          MODAL (unchanged)
+          MODAL (updated with Cart)
       ═══════════════════════════════════════ */}
       {selectedProduct && (
-        <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
+        <div className="modal-overlay" onClick={() => { setSelectedProduct(null); setSelectedColor(''); setSelectedSize(''); }}>
           <div className="modal-box" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedProduct(null)}>✕</button>
+            <button className="modal-close" onClick={() => { setSelectedProduct(null); setSelectedColor(''); setSelectedSize(''); }}>✕</button>
 
             <div className="modal-img-side">
               <img className="modal-main-img" src={selectedProduct.images[selectedImage]} alt={selectedProduct.name} />
@@ -1265,23 +1473,128 @@ export default function Home() {
                 <span className="modal-price">{selectedProduct.price}</span>
               </div>
 
-              <div className="modal-lbl">AVAILABLE COLORS</div>
+              <div className="modal-lbl">CHOOSE COLOR</div>
               <div className="tags">
-                {selectedProduct.colors.map(c => <span key={c} className="tag">{c.toUpperCase()}</span>)}
+                {selectedProduct.colors.map(c => (
+                  <button 
+                    key={c} 
+                    className={`tag ${selectedColor === c ? 'active' : ''}`}
+                    onClick={() => setSelectedColor(c)}
+                  >
+                    {c.toUpperCase()}
+                  </button>
+                ))}
               </div>
 
-              <div className="modal-lbl">AVAILABLE SIZES</div>
+              <div className="modal-lbl">CHOOSE SIZE</div>
               <div className="tags">
-                {selectedProduct.sizes.map(s => <span key={s} className="tag">{s}</span>)}
+                {selectedProduct.sizes.map(s => (
+                  <button 
+                    key={s} 
+                    className={`tag ${selectedSize === s ? 'active' : ''}`}
+                    onClick={() => setSelectedSize(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
 
-              <a href={whatsappMsg(selectedProduct)} target="_blank" rel="noreferrer" className="btn-wa">
-                <span>⊕</span> ORDER VIA WHATSAPP
-              </a>
+              <button 
+                onClick={addToCart} 
+                className="btn-add-cart"
+                disabled={!selectedColor || !selectedSize}
+              >
+                <span>⊕</span> {(!selectedColor || !selectedSize) ? 'SELECT COLOR & SIZE' : 'ADD TO CART'}
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ═══════════════════════════════════════
+          CART SIDEBAR
+      ═══════════════════════════════════════ */}
+      <AnimatePresence>
+        {cartOpen && (
+          <motion.div 
+            className="cart-overlay" 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCartOpen(false)}
+          >
+            <motion.div 
+              className="cart-sidebar"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="cart-header">
+                <h2 className="cart-title">YOUR BAG</h2>
+                <button className="cart-close" onClick={() => setCartOpen(false)}>✕</button>
+              </div>
+
+              <div className="cart-items">
+                {cart.length === 0 ? (
+                  <div className="cart-empty">
+                    <p style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '11px', letterSpacing: '2px' }}>
+                      YOUR BAG IS EMPTY
+                    </p>
+                  </div>
+                ) : (
+                  cart.map((item, idx) => (
+                    <div key={`${item.id}-${item.color}-${item.size}`} className="cart-item">
+                      <img src={item.image} alt={item.name} className="cart-item-img" />
+                      <div className="cart-item-info">
+                        <div className="cart-item-name">{item.name}</div>
+                        <div className="cart-item-meta">{item.color} / {item.size}</div>
+                        <div className="cart-item-price">PKR {item.price}</div>
+                        
+                        <div className="cart-item-qty">
+                          <button className="qty-btn" onClick={() => updateQuantity(item.id, item.color, item.size, -1)}>-</button>
+                          <span className="qty-num">{item.quantity}</span>
+                          <button className="qty-btn" onClick={() => updateQuantity(item.id, item.color, item.size, 1)}>+</button>
+                          
+                          <button 
+                            style={{ background: 'none', border: 'none', color: '#800', fontSize: '9px', marginLeft: 'auto', cursor: 'pointer', fontFamily: "'Montserrat', sans-serif", letterSpacing: '1px' }}
+                            onClick={() => removeFromCart(item.id, item.color, item.size)}
+                          >
+                            REMOVE
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {cart.length > 0 && (
+                <div className="cart-footer">
+                  <div className="cart-total-row">
+                    <span className="cart-total-lbl">SUBTOTAL</span>
+                    <span className="cart-total-val">PKR {cart.reduce((acc, item) => acc + (parseInt(item.price) * item.quantity), 0)}</span>
+                  </div>
+                  
+                  <a 
+                    href={whatsappCartMsg()} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="btn-add-cart"
+                    style={{ textAlign: 'center', display: 'block' }}
+                  >
+                    ORDER VIA WHATSAPP
+                  </a>
+                  <p style={{ textAlign: 'center', fontFamily: "'Montserrat', sans-serif", fontSize: '8px', color: '#444', marginTop: '16px', letterSpacing: '1px' }}>
+                    FREE SHIPPING ON ALL ORDERS
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════════════════════════════════
           FOOTER — New Professional Footer
