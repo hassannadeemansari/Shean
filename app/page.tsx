@@ -817,7 +817,7 @@ export default function Home() {
            CART SIDEBAR
         ══════════════════════════════════ */
         .cart-overlay {
-          position: fixed; inset: 0; z-index: 3000;
+          position: fixed; inset: 0; z-index: 10000;
           background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
           display: flex; justify-content: flex-end;
         }
