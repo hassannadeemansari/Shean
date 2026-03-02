@@ -36,8 +36,14 @@ const products: Product[] = [
   { id: 10, name: 'Multi Printed ', category: 'tshirt', images: ['/simp4.jpeg'], colors: ['White'], sizes: ['M','L'], price: '1200' },
   { id: 11, name: 'Simple Shirt ', category: 'tshirt', images: ['/simp5.jpeg'], colors: ['White'], sizes: ['M','L'], price: '1200' },
   { id: 12, name: 'Simple Shirt ', category: 'tshirt', images: ['/simp6.jpeg'], colors: ['White'], sizes: ['M','L'], price: '1200' },
-  { id: 13, name: 'Lining printed', category: 'tshirt', images: ['/stripe.jpeg', '/stripe2.jpeg', '/stripe3.jpeg' , '/stripe4.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
-  { id: 1, name: 'Lining printed', category: 'tshirt', images: ['/sh1.jpeg', '/sh2.jpeg', '/sh3.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
+  { id: 13, name: 'Stripe Printed ', category: 'tshirt', images: ['/stripe.jpeg', '/stripe2.jpeg', '/stripe3.jpeg' , '/stripe4.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
+  { id: 14, name: 'Johnny collar Drop Shoulder polo', category: 'tshirt', images: ['/johnny.jpeg','/johnny2.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
+  { id: 15, name: 'Stripe Printed Shirt', category: 'tshirt', images: ['/stripeshirt.jpeg','/stripeshirt2.jpeg' ,'/stripeshirt3.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
+  { id: 16, name: 'Down shoulder', category: 'tshirt', images: ['/Downshoulder.jpeg','/Downshoulder2.jpeg' ,'/Downshoulder3.jpeg'], colors: ['Green', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '900' },
+  { id: 17, name: 'Double pocket', category: 'tshirt', images: ['/Doublepocket.jpeg','/Doublepocket2.jpeg' ,'/Doublepocket3.jpeg'], colors: ['Brown', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1299' },
+  { id: 18, name: '3 Pes Tracksuits ', category: 'fulldress', images: ['/trac3p.jpeg'], colors: ['Black', 'Brown'], sizes: ['M','L','XL'], price: '1999' },
+  { id: 19, name: 'multi printed', category: 'tshirt', images: ['/multi.jpeg','/multi2.jpeg' ,'/multi3.jpeg'], colors: ['Brown', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1109' },
+  { id:20, name: 'Lining drop shoulder ', category: 'tshirt', images: ['/liningdrop.jpeg','/liningdrop2.jpeg' ,'/liningdrop3.jpeg'], colors: ['Brown', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
 
 ];
 
@@ -104,12 +110,13 @@ export default function Home() {
   const filteredProducts = activeCategory === 'all' ? products : products.filter(p => p.category === activeCategory);
 
   const addToCart = () => {
-    if (!selectedProduct || !selectedColor || !selectedSize) {
-      alert('Please select color and size');
-      return;
-    }
+    if (!selectedProduct) return;
 
-    const cartId = `${selectedProduct.id}-${selectedColor}-${selectedSize}`;
+    // Make color and size optional, use 'Standard' if not selected
+    const color = selectedColor || 'Standard';
+    const size = selectedSize || 'Standard';
+
+    const cartId = `${selectedProduct.id}-${color}-${size}`;
     const existingItem = cart.find(item => `${item.id}-${item.color}-${item.size}` === cartId);
 
     if (existingItem) {
@@ -124,8 +131,8 @@ export default function Home() {
         name: selectedProduct.name,
         price: selectedProduct.price,
         image: selectedProduct.images[0],
-        color: selectedColor,
-        size: selectedSize,
+        color: color,
+        size: size,
         quantity: 1
       }]);
     }
@@ -166,6 +173,15 @@ export default function Home() {
     message += "Please confirm availability and sharing shipping details.";
 
     return `https://wa.me/923190371458?text=${encodeURIComponent(message)}`;
+  };
+
+  const handleWhatsAppOrder = () => {
+    const url = whatsappCartMsg();
+    // Clear the cart and close it first
+    setCart([]);
+    setCartOpen(false);
+    // Navigate to WhatsApp
+    window.open(url, '_blank');
   };
 
   const navLinks = [
@@ -786,7 +802,7 @@ export default function Home() {
         .tag.active { border-color: #fff; color: #fff; background: #fff; color: #000; }
 
         .btn-add-cart {
-          display: flex; align-items: center; justify-content: center; gap: 10px;
+          display: block; text-align: center;
           padding: 16px 24px; background: #fff;
           color: #000; font-family: 'Montserrat', sans-serif;
           font-size: 10px; letter-spacing: 4px; font-weight: 500;
@@ -1305,7 +1321,7 @@ export default function Home() {
             <div className="about-big-text">S</div>
             <div className="about-mosaic">
               <div className="about-mosaic-item">
-                <img src="/logo.jpeg" alt="SHEAN" className="about-mosaic-img" />
+                <img src="/Shean.png" alt="SHEAN" className="about-mosaic-img" />
                 {/* Four corner bracket decorations */}
                 <div className="about-frame-tl" />
                 <div className="about-frame-tr" />
@@ -1502,9 +1518,8 @@ export default function Home() {
               <button 
                 onClick={addToCart} 
                 className="btn-add-cart"
-                disabled={!selectedColor || !selectedSize}
               >
-                <span>⊕</span> {(!selectedColor || !selectedSize) ? 'SELECT COLOR & SIZE' : 'ADD TO CART'}
+                <span>⊕</span> ADD TO CART
               </button>
             </div>
           </div>
@@ -1577,15 +1592,13 @@ export default function Home() {
                     <span className="cart-total-val">PKR {cart.reduce((acc, item) => acc + (parseInt(item.price) * item.quantity), 0)}</span>
                   </div>
                   
-                  <a 
-                    href={whatsappCartMsg()} 
-                    target="_blank" 
-                    rel="noreferrer" 
+                  <button 
+                    onClick={handleWhatsAppOrder}
                     className="btn-add-cart"
-                    style={{ textAlign: 'center', display: 'block' }}
+                    style={{ textAlign: 'center' }}
                   >
                     ORDER VIA WHATSAPP
-                  </a>
+                  </button>
                   <p style={{ textAlign: 'center', fontFamily: "'Montserrat', sans-serif", fontSize: '8px', color: '#444', marginTop: '16px', letterSpacing: '1px' }}>
                     FREE SHIPPING ON ALL ORDERS
                   </p>
