@@ -44,7 +44,6 @@ const products: Product[] = [
   { id: 18, name: '3 Pes Tracksuits ', category: 'fulldress', images: ['/trac3p.jpeg'], colors: ['Black', 'Brown'], sizes: ['M','L','XL'], price: '1999' },
   { id: 19, name: 'multi printed', category: 'tshirt', images: ['/multi.jpeg','/multi2.jpeg' ,'/multi3.jpeg'], colors: ['Brown', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1109' },
   { id:20, name: 'Lining drop shoulder ', category: 'tshirt', images: ['/liningdrop.jpeg','/liningdrop2.jpeg' ,'/liningdrop3.jpeg'], colors: ['Brown', 'Black', 'White'], sizes: ['S','M','L','XL'], price: '1200' },
-
 ];
 
 export default function Home() {
@@ -94,6 +93,13 @@ export default function Home() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [mobileMenuOpen, selectedProduct, cartOpen]);
+
+  // Close dev widget when modal or cart opens
+  useEffect(() => {
+    if (selectedProduct || cartOpen) {
+      setDevWidgetOpen(false);
+    }
+  }, [selectedProduct, cartOpen]);
 
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
@@ -177,10 +183,8 @@ export default function Home() {
 
   const handleWhatsAppOrder = () => {
     const url = whatsappCartMsg();
-    // Clear the cart and close it first
     setCart([]);
     setCartOpen(false);
-    // Navigate to WhatsApp
     window.open(url, '_blank');
   };
 
@@ -309,7 +313,6 @@ export default function Home() {
           position: absolute; inset: 0;
           width: 100%; height: 100%; object-fit: cover;
         }
-        /* Multi-layer overlay for depth */
         .hero-overlay {
           position: absolute; inset: 0;
           background:
@@ -362,7 +365,6 @@ export default function Home() {
         }
         .hero-cta:hover { background: transparent; color: #fff; }
 
-        /* scroll indicator */
         .hero-scroll {
           position: absolute; bottom: 36px; left: 50%;
           transform: translateX(-50%);
@@ -407,7 +409,6 @@ export default function Home() {
           white-space: nowrap; pointer-events: none;
           letter-spacing: -4px;
         }
-        /* Single framed logo image */
         .about-mosaic {
           position: relative;
           width: 100%;
@@ -420,14 +421,12 @@ export default function Home() {
           background: #0d0d0d;
           border: 1px solid #1e1e1e;
         }
-        /* Inner decorative inset border */
         .about-mosaic-item::before {
           content: ''; position: absolute;
           inset: 14px;
           border: 1px solid rgba(255,255,255,0.08);
           z-index: 2; pointer-events: none;
         }
-        /* Bottom gradient vignette */
         .about-mosaic-item::after {
           content: ''; position: absolute; inset: 0;
           background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 55%);
@@ -443,7 +442,6 @@ export default function Home() {
           filter: grayscale(0%);
           transform: scale(1.04);
         }
-        /* Corner bracket accents */
         .about-frame-tl {
           position: absolute; top: -1px; left: -1px;
           width: 28px; height: 28px;
@@ -468,14 +466,12 @@ export default function Home() {
           border-bottom: 2px solid #fff; border-right: 2px solid #fff;
           z-index: 3; pointer-events: none;
         }
-        /* Decorative corner accent */
         .about-accent {
           position: absolute; bottom: -24px; right: -24px;
           width: 80px; height: 80px;
           border-bottom: 1px solid #333; border-right: 1px solid #333;
         }
 
-        .about-right {}
         .about-label {
           font-family: 'Montserrat', sans-serif;
           font-size: 9px; letter-spacing: 6px; color: #555;
@@ -525,7 +521,7 @@ export default function Home() {
         .about-cta:hover { border-color: #fff; background: #fff; color: #000; }
 
         /* ══════════════════════════════════
-           PRODUCTS SECTION (unchanged)
+           PRODUCTS
         ══════════════════════════════════ */
         .sec-products {
           padding: 100px 60px;
@@ -638,7 +634,7 @@ export default function Home() {
         }
 
         /* ══════════════════════════════════
-           WHY CHOOSE (unchanged)
+           WHY CHOOSE
         ══════════════════════════════════ */
         .sec-why {
           padding: 100px 60px;
@@ -681,7 +677,7 @@ export default function Home() {
         }
 
         /* ══════════════════════════════════
-           HOW IT WORKS (unchanged)
+           HOW IT WORKS
         ══════════════════════════════════ */
         .sec-how {
           padding: 100px 60px;
@@ -728,7 +724,7 @@ export default function Home() {
         }
 
         /* ══════════════════════════════════
-           MODAL (unchanged)
+           MODAL
         ══════════════════════════════════ */
         .modal-overlay {
           position: fixed; inset: 0; z-index: 2000;
@@ -1029,12 +1025,11 @@ export default function Home() {
         .dev-widget {
           position: fixed;
           bottom: 28px; right: 28px;
-          z-index: 9999;
+          z-index: 500;
           display: flex; flex-direction: column;
           align-items: flex-end; gap: 12px;
         }
 
-        /* Popup card */
         .dev-card {
           background: #0a0a0a;
           border: 1px solid #222;
@@ -1095,7 +1090,6 @@ export default function Home() {
         .dev-card:hover .dev-card-name,
         .dev-card:hover .dev-card-sub { color: #000; }
 
-        /* Floating trigger button */
         .dev-btn {
           width: 52px; height: 52px;
           background: #000;
@@ -1109,7 +1103,6 @@ export default function Home() {
         }
         .dev-btn:hover { border-color: #fff; transform: scale(1.08); }
 
-        /* Pulse rings */
         .dev-btn::before, .dev-btn::after {
           content: '';
           position: absolute; inset: -1px;
@@ -1123,7 +1116,6 @@ export default function Home() {
           100% { transform: scale(1.9); opacity: 0; }
         }
 
-        /* Code icon inside button */
         .dev-btn-icon {
           font-family: 'Montserrat', sans-serif;
           font-size: 10px; letter-spacing: 1px; color: #fff;
@@ -1181,7 +1173,7 @@ export default function Home() {
       `}</style>
 
       {/* ═══════════════════════════════════════
-          NAVBAR — Fully Responsive
+          NAVBAR
       ═══════════════════════════════════════ */}
       <nav className={`navbar ${isNavbarSticky ? 'scrolled' : ''}`}>
         <div className="navbar-inner">
@@ -1256,7 +1248,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ═══════════════════════════════════════
-          HERO — Enhanced
+          HERO
       ═══════════════════════════════════════ */}
       <section id="home" className="hero-section">
         <video autoPlay loop muted playsInline className="hero-video">
@@ -1304,7 +1296,6 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
         <div className="hero-scroll">
           <span className="hero-scroll-label">SCROLL</span>
           <div className="hero-scroll-line" />
@@ -1312,17 +1303,15 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          ABOUT — Redesigned
+          ABOUT
       ═══════════════════════════════════════ */}
       <section id="about" className="sec-about">
         <div className="about-inner">
-          {/* Left: visual panel */}
           <div className="about-left">
             <div className="about-big-text">S</div>
             <div className="about-mosaic">
               <div className="about-mosaic-item">
                 <img src="/Shean.png" alt="SHEAN" className="about-mosaic-img" />
-                {/* Four corner bracket decorations */}
                 <div className="about-frame-tl" />
                 <div className="about-frame-tr" />
                 <div className="about-frame-bl" />
@@ -1332,7 +1321,6 @@ export default function Home() {
             <div className="about-accent" />
           </div>
 
-          {/* Right: text content */}
           <div className="about-right">
             <div className="about-label">OUR STORY</div>
             <h2 className="about-heading">About<br /><em>SHEAN</em></h2>
@@ -1369,7 +1357,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          PRODUCTS (unchanged)
+          PRODUCTS
       ═══════════════════════════════════════ */}
       <section id="products" className="sec-products">
         <div className="sec-label">CURATED COLLECTION</div>
@@ -1413,7 +1401,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          WHY CHOOSE SHEAN (unchanged)
+          WHY CHOOSE SHEAN
       ═══════════════════════════════════════ */}
       <section className="sec-why">
         <div className="sec-label">THE SHEAN DIFFERENCE</div>
@@ -1436,7 +1424,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          HOW IT WORKS (unchanged)
+          HOW IT WORKS
       ═══════════════════════════════════════ */}
       <section id="how" className="sec-how">
         <div className="sec-label">THE PROCESS</div>
@@ -1459,7 +1447,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════
-          MODAL (updated with Cart)
+          MODAL
       ═══════════════════════════════════════ */}
       {selectedProduct && (
         <div className="modal-overlay" onClick={() => { setSelectedProduct(null); setSelectedColor(''); setSelectedSize(''); }}>
@@ -1559,7 +1547,7 @@ export default function Home() {
                     </p>
                   </div>
                 ) : (
-                  cart.map((item, idx) => (
+                  cart.map((item) => (
                     <div key={`${item.id}-${item.color}-${item.size}`} className="cart-item">
                       <img src={item.image} alt={item.name} className="cart-item-img" />
                       <div className="cart-item-info">
@@ -1610,59 +1598,34 @@ export default function Home() {
       </AnimatePresence>
 
       {/* ═══════════════════════════════════════
-          FOOTER — New Professional Footer
+          FOOTER
       ═══════════════════════════════════════ */}
       <footer className="site-footer">
         <div className="footer-top">
-          {/* Brand column */}
           <div>
             <div className="footer-brand-name">SHEAN</div>
             <p className="footer-brand-desc">
               A modern fashion brand focused on simplicity, confidence, and identity. Premium clothing designed for comfort and everyday expression.
             </p>
             <div className="footer-social-row">
-              {/* Instagram */}
-              <a
-                href="https://instagram.com/shean.pk"
-                target="_blank" rel="noreferrer"
-                className="footer-social-link"
-                aria-label="Instagram"
-              >
+              <a href="https://instagram.com/shean.pk" target="_blank" rel="noreferrer" className="footer-social-link" aria-label="Instagram">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                   <circle cx="12" cy="12" r="4"/>
                   <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
                 </svg>
               </a>
-              {/* WhatsApp */}
-              <a
-                href="https://wa.me/923190371458"
-                target="_blank" rel="noreferrer"
-                className="footer-social-link"
-                aria-label="WhatsApp"
-              >
+              <a href="https://wa.me/923190371458" target="_blank" rel="noreferrer" className="footer-social-link" aria-label="WhatsApp">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
                 </svg>
               </a>
-              {/* Facebook */}
-              <a
-                href="https://facebook.com/shean.pk"
-                target="_blank" rel="noreferrer"
-                className="footer-social-link"
-                aria-label="Facebook"
-              >
+              <a href="https://facebook.com/shean.pk" target="_blank" rel="noreferrer" className="footer-social-link" aria-label="Facebook">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
                 </svg>
               </a>
-              {/* TikTok */}
-              <a
-                href="https://tiktok.com/@shean.pk"
-                target="_blank" rel="noreferrer"
-                className="footer-social-link"
-                aria-label="TikTok"
-              >
+              <a href="https://tiktok.com/@shean.pk" target="_blank" rel="noreferrer" className="footer-social-link" aria-label="TikTok">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.77 1.52V6.76a4.85 4.85 0 0 1-1-.07z"/>
                 </svg>
@@ -1670,7 +1633,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Navigation column */}
           <div>
             <div className="footer-col-title">NAVIGATE</div>
             {navLinks.map(link => (
@@ -1680,7 +1642,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Contact column */}
           <div>
             <div className="footer-col-title">GET IN TOUCH</div>
             <div className="footer-contact-item">
@@ -1719,7 +1680,6 @@ export default function Home() {
           <span className="footer-tagline">Wear Confidence. Express Your Identity.</span>
         </div>
 
-        {/* Developer Credit Bar */}
         <div className="footer-dev-bar">
           <a
             href="https://hassan-nadeem.vercel.app/"
@@ -1736,10 +1696,13 @@ export default function Home() {
       </footer>
 
       {/* ═══════════════════════════════════════
-          FLOATING DEV WIDGET — fixed bottom-right
+          FLOATING DEV WIDGET
+          — hidden whenever modal or cart is open
       ═══════════════════════════════════════ */}
-      <div className={`dev-widget ${devWidgetOpen ? 'open' : ''}`}>
-        {/* Popup card — appears above button */}
+      <div
+        className={`dev-widget ${devWidgetOpen ? 'open' : ''}`}
+        style={{ display: (selectedProduct || cartOpen) ? 'none' : 'flex' }}
+      >
         <a
           href="https://hassan-nadeem.vercel.app/"
           target="_blank"
@@ -1754,7 +1717,6 @@ export default function Home() {
           </div>
         </a>
 
-        {/* Floating trigger button */}
         <button
           className={`dev-btn ${devWidgetOpen ? 'active' : ''}`}
           onClick={() => setDevWidgetOpen(v => !v)}
